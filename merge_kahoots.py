@@ -11,7 +11,7 @@ __copyright = "Copyright (c) 2023 EnICS Labs"
 __credits__ = ["David Peled", "Prof. Adam Teman", "Google"]
 
 __license__ = "MIT"
-__version__ = "2.0"
+__version__ = "2.1"
 __maintainer__ = "Adam Teman"
 __email__ = "adam.teman@biu.ac.il"
 __status__ = "Development"
@@ -42,6 +42,8 @@ if __name__ == '__main__':
 
     # Create hashes for the student names and IDs
     ID_HASH, KAHOOT_NAMES_HASH = mk.get_id_table(STUDENTS_FILE)
+    #df=pd.DataFrame(data=KAHOOT_NAMES_HASH, index=[0])
+    #df.to_excel("tmp.xlsx",index=False)
 
     # Get all xlsx files in the 'kahoots/' directory.
     reports = os.listdir(REPORTS_PATH)

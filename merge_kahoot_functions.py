@@ -32,13 +32,15 @@ def get_id_table(filename):
         
     for index, row in df.iterrows():
         this_id=str(row[ID])
+        this_firstname=str(row[FIRST]).strip('.# \t\n\r\x0b\x0c').lower()
+        this_lastname=str(row[LAST]).strip('.# \t\n\r\x0b\x0c').lower()
         if not this_id in ID_HASH:
-            ID_HASH[this_id]=[row[FIRST],row[LAST]]
+            ID_HASH[this_id]=[this_firstname,this_lastname]
         if str(row[LAST])=='nan':
-            KAHOOT_NAMES_HASH[frozenset([str(row[FIRST]).lower()])]=this_id
-            #print('Adding '+str(row[FIRST]).lower()+' to hash')
+            KAHOOT_NAMES_HASH[frozenset([this_firstname])]=this_id
+            #print('Adding '+this_firstname+' to hash')
         else:
-            KAHOOT_NAMES_HASH[frozenset([str(row[FIRST]).lower(),str(row[LAST]).lower()])]=this_id
+            KAHOOT_NAMES_HASH[frozenset([this_firstname,this_lastname])]=this_id
     return ID_HASH, KAHOOT_NAMES_HASH
 #------get_id_table--------------#
 
@@ -49,7 +51,9 @@ def get_id_table(filename):
 #-----------------------------#
 #   Get Players and Scores    #
 #-----------------------------#
-# Input: Kahoot Report XLSX file
+# Input: 
+#   1) Kahoot Report XLSX file
+#   2) Hash (dict) of player names
 # Output: Dataframe containing
 #   1) Frozenset of player name
 #   2) Score, Number of Correct Answers, Ratio to High Score
@@ -90,7 +94,7 @@ def get_players_and_scores(path,report,KAHOOT_NAMES_HASH):
     # First we split the string about the characters: '.','_','-' and other white space characters.
     # Note the '+' indicates we want to include cases of repeating characters.
     # Example: 'david. ._ -- .peled' will become ['david','peled']
-    players = df[PLAYER].str.split(r'[._\s-]+', expand=False)
+    players = df[PLAYER].str.split(r'[._\s-]+', n=1, expand=False)
  
     # We then turn the lists into frozensets.
     #     this creates un-ordered pairs which is exactly what we want:
@@ -107,7 +111,7 @@ def get_players_and_scores(path,report,KAHOOT_NAMES_HASH):
         else:
             id_list.append(' '.join(set))
             couldnt_find.append(set)
-            #print(' '.join(set) + ' Not in hash')
+            print(' '.join(set) + ' Not in hash')
             #print(list(set)[0] + ' ' + list(set)[1] + ' Not in hash')
 
     # Finally, we add the id_list to the dataframe as an index 
