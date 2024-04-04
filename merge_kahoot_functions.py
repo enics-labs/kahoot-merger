@@ -24,23 +24,20 @@ def get_id_table(filename):
 
     # Column headers for dataframe:
     ID     = 'ID'
-    FIRST  = 'First Name'
-    LAST   = 'Last Name'
+    #FIRST  = 'First Name'
+    #LAST   = 'Last Name'
+    NAME = 'Name'
 
     ID_HASH = dict()
     KAHOOT_NAMES_HASH = dict()
         
     for index, row in df.iterrows():
         this_id=str(row[ID])
-        this_firstname=str(row[FIRST]).strip('.# \t\n\r\x0b\x0c').lower()
-        this_lastname=str(row[LAST]).strip('.# \t\n\r\x0b\x0c').lower()
+        this_name=row[NAME].split(' ')
+        this_frozen=frozenset([str(item) for item in this_name if item])
         if not this_id in ID_HASH:
-            ID_HASH[this_id]=[this_firstname,this_lastname]
-        if str(row[LAST])=='nan':
-            KAHOOT_NAMES_HASH[frozenset([this_firstname])]=this_id
-            #print('Adding '+this_firstname+' to hash')
-        else:
-            KAHOOT_NAMES_HASH[frozenset([this_firstname,this_lastname])]=this_id
+            ID_HASH[this_id]=this_name
+        KAHOOT_NAMES_HASH[this_frozen]=this_id
     return ID_HASH, KAHOOT_NAMES_HASH
 #------get_id_table--------------#
 
@@ -51,9 +48,7 @@ def get_id_table(filename):
 #-----------------------------#
 #   Get Players and Scores    #
 #-----------------------------#
-# Input: 
-#   1) Kahoot Report XLSX file
-#   2) Hash (dict) of player names
+# Input: Kahoot Report XLSX file
 # Output: Dataframe containing
 #   1) Frozenset of player name
 #   2) Score, Number of Correct Answers, Ratio to High Score
@@ -94,7 +89,7 @@ def get_players_and_scores(path,report,KAHOOT_NAMES_HASH):
     # First we split the string about the characters: '.','_','-' and other white space characters.
     # Note the '+' indicates we want to include cases of repeating characters.
     # Example: 'david. ._ -- .peled' will become ['david','peled']
-    players = df[PLAYER].str.split(r'[._\s-]+', n=1, expand=False)
+    players = df[PLAYER].str.split(r'[._\s-]+', expand=False)
  
     # We then turn the lists into frozensets.
     #     this creates un-ordered pairs which is exactly what we want:
@@ -111,7 +106,7 @@ def get_players_and_scores(path,report,KAHOOT_NAMES_HASH):
         else:
             id_list.append(' '.join(set))
             couldnt_find.append(set)
-            print(' '.join(set) + ' Not in hash')
+            #print(' '.join(set) + ' Not in hash')
             #print(list(set)[0] + ' ' + list(set)[1] + ' Not in hash')
 
     # Finally, we add the id_list to the dataframe as an index 
@@ -165,7 +160,6 @@ def get_players_and_scores(path,report,KAHOOT_NAMES_HASH):
 def write_out_excel(merged,ID_HASH,CORRECT_THRESHOLD,RATIO_THRESHOLD,OUTPUT_FILE):
     import pandas as pd
     pd.options.mode.chained_assignment = None  # quiets SettingWithCopyWarning
-   
     # Column headers for dataframe:
     ID     = 'ID'
     FIRST  = 'First Name'
