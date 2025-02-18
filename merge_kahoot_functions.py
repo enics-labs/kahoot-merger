@@ -33,6 +33,7 @@ def get_id_table(filename):
         
     for index, row in df.iterrows():
         this_id=str(row[ID])
+        print(row[NAME])
         this_name=row[NAME].split(' ')
         this_frozen=frozenset([str(item) for item in this_name if item])
         if not this_id in ID_HASH:
@@ -159,6 +160,7 @@ def get_players_and_scores(path,report,KAHOOT_NAMES_HASH):
 #   2) Frozensets to IDs
 def write_out_excel(merged,ID_HASH,CORRECT_THRESHOLD,RATIO_THRESHOLD,OUTPUT_FILE):
     import pandas as pd
+    import numpy as np
     pd.options.mode.chained_assignment = None  # quiets SettingWithCopyWarning
     # Column headers for dataframe:
     ID     = 'ID'
@@ -171,6 +173,7 @@ def write_out_excel(merged,ID_HASH,CORRECT_THRESHOLD,RATIO_THRESHOLD,OUTPUT_FILE
     last_list=[]
     for id in merged[ID]:
         if id in ID_HASH:
+            print(id, ID_HASH[id][0], ID_HASH[id][1])
             first_list.append(ID_HASH[id][0])
             last_list.append(ID_HASH[id][1])
         else:
@@ -209,6 +212,38 @@ def write_out_excel(merged,ID_HASH,CORRECT_THRESHOLD,RATIO_THRESHOLD,OUTPUT_FILE
         total_correct_list.append(total_correct)
     correct_df['>'+str(CORRECT_THRESHOLD)+' Correct']=total_correct_list
 
+    # Final Grade DataFrame
+    # ---------------------
+    # Calculate the grade:
+    # --- More than 7 correct = 100
+    # --- Every wrong answer under that --> -20
+    
+    grades_df = merged[basic_columns + correct_columns] # Create the dataframe
+    grades_df = grades_df.fillna(0)  # turn NaN into zeros
+    for i in range(grades_df.shape[0]):  # Iterate over rows
+        for j in range(3,grades_df.shape[1]):  # Iterate over columns
+            # Change the number of correct answers into a grade between 0 and 100, as described above
+            grades_df.iat[i, j] = max(0,min(100,(grades_df.iat[i, j]-2)*20)) 
+    # Now choose the top 7 Kahoots and find their average.
+    # Store this in a new column
+    # Store the number of points (the Kahoot is worth 8 points)
+    grades_df['Average'] = 0
+    grades_df['Points'] = 0
+
+    for index, row in grades_df.iterrows():  # Iterate over rows
+        print(row.iloc[3:].tolist())
+        grades = sorted(row.iloc[3:].tolist(),reverse=True)  # Sort the grades in a list
+        average_grade = np.mean(grades[:7])   # Calculate the average of the top 7 grades
+        # Write the average grade into the 'Average' column
+        grades_df.at[index, 'Average'] = int(average_grade)
+        # Write the number of points into the 'Points' column
+        final_points = int(8 * (average_grade / 100))
+        grades_df.at[index, 'Points'] = final_points
+
+
+
+                
+
     # Ratio DataFrame
     # ---------------
     # including ratio > threshold
@@ -229,6 +264,7 @@ def write_out_excel(merged,ID_HASH,CORRECT_THRESHOLD,RATIO_THRESHOLD,OUTPUT_FILE
         score_df.to_excel(writer, sheet_name='Scores', index=False)
         correct_df.to_excel(writer, sheet_name='Correct', index=False)
         ratio_df.to_excel(writer, sheet_name='Ratio', index=False)
+        grades_df.to_excel(writer, sheet_name='Final Grade', index=False)
 
     return   
 
