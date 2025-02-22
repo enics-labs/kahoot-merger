@@ -20,7 +20,7 @@ def get_id_table(filename):
     import pandas as pd
 
     # Read ID table into dataframe
-    df = pd.read_csv(filename)
+    df = pd.read_csv(filename, encoding='windows-1255')
 
     # Column headers for dataframe:
     ID     = 'ID'
@@ -33,12 +33,16 @@ def get_id_table(filename):
         
     for index, row in df.iterrows():
         this_id=str(row[ID])
-        print(row[NAME])
+        #print(row[NAME])
         this_name=row[NAME].split(' ')
-        this_frozen=frozenset([str(item) for item in this_name if item])
+        # If this_name has only one element, add an empty string to it to accept a single word name
+        if len(this_name) == 1:
+            this_name.append('')  
+        this_frozen=frozenset([str(item).lower() for item in this_name if item])
         if not this_id in ID_HASH:
             ID_HASH[this_id]=this_name
         KAHOOT_NAMES_HASH[this_frozen]=this_id
+    print ('Successfully read '+filename+' and created ID and Name hashes')
     return ID_HASH, KAHOOT_NAMES_HASH
 #------get_id_table--------------#
 
@@ -90,7 +94,7 @@ def get_players_and_scores(path,report,KAHOOT_NAMES_HASH):
     # First we split the string about the characters: '.','_','-' and other white space characters.
     # Note the '+' indicates we want to include cases of repeating characters.
     # Example: 'david. ._ -- .peled' will become ['david','peled']
-    players = df[PLAYER].str.split(r'[._\s-]+', expand=False)
+    players = df[PLAYER].str.lower().str.split(r'[._\s-]+', expand=False)
  
     # We then turn the lists into frozensets.
     #     this creates un-ordered pairs which is exactly what we want:
@@ -101,8 +105,10 @@ def get_players_and_scores(path,report,KAHOOT_NAMES_HASH):
     id_list=[]
     couldnt_find=[] # list of names not defined in the students list
     for set in players:
-        if set in KAHOOT_NAMES_HASH:
-            id_list.append(KAHOOT_NAMES_HASH[set])
+        # Convert the frozenset to lowercase before checking
+        lowercase_set = frozenset([str(item).lower() for item in set])  
+        if lowercase_set in KAHOOT_NAMES_HASH:
+            id_list.append(KAHOOT_NAMES_HASH[lowercase_set])
             #print('Adding '+ KAHOOT_NAMES_HASH[set])
         else:
             id_list.append(' '.join(set))
@@ -173,7 +179,7 @@ def write_out_excel(merged,ID_HASH,CORRECT_THRESHOLD,RATIO_THRESHOLD,OUTPUT_FILE
     last_list=[]
     for id in merged[ID]:
         if id in ID_HASH:
-            print(id, ID_HASH[id][0], ID_HASH[id][1])
+            #print(id, ID_HASH[id][0], ID_HASH[id][1])
             first_list.append(ID_HASH[id][0])
             last_list.append(ID_HASH[id][1])
         else:
@@ -231,7 +237,7 @@ def write_out_excel(merged,ID_HASH,CORRECT_THRESHOLD,RATIO_THRESHOLD,OUTPUT_FILE
     grades_df['Points'] = 0
 
     for index, row in grades_df.iterrows():  # Iterate over rows
-        print(row.iloc[3:].tolist())
+        #print(row.iloc[3:].tolist())
         grades = sorted(row.iloc[3:].tolist(),reverse=True)  # Sort the grades in a list
         average_grade = np.mean(grades[:7])   # Calculate the average of the top 7 grades
         # Write the average grade into the 'Average' column
@@ -265,7 +271,7 @@ def write_out_excel(merged,ID_HASH,CORRECT_THRESHOLD,RATIO_THRESHOLD,OUTPUT_FILE
         correct_df.to_excel(writer, sheet_name='Correct', index=False)
         ratio_df.to_excel(writer, sheet_name='Ratio', index=False)
         grades_df.to_excel(writer, sheet_name='Final Grade', index=False)
-
+    print ('Successfully wrote out the results to: '+OUTPUT_FILE)
     return   
 
 #----write_out_excel----------#
