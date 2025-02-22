@@ -51,6 +51,15 @@ A few notes:
 
 Note that this will sum up the accumulated total of a student who got disconnected during the quiz and reconnected, something that happens quite often.
 
+## Easy way to run this
+You can now download the Jupyter Notebook called "kahoots2025.ipynb" and run it instead of the merge_kahoots.py script (this makes it easier to visualize and debug).
+
+If you have no idea what this means, then:
+- Go to anaconda.com and download Anaconda (this will install Python and Jupyter Notebooks)
+- Open Jupyter Notebooks - this will open a browser window
+- Navigate to the directory that you cloned to and open the "kahoots2025.ipynb" file
+- Now, by pressing "shift+enter" you can run the script, step-by-step
+
 # Output
 - You will get a worksheet under the "merged_kahoots" directory with a date stamp. 
 - The worksheet (currently) has three tabs "Scores", "Correct" and "Ratio"
