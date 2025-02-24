@@ -243,7 +243,7 @@ def write_out_excel(merged,ID_HASH,CORRECT_THRESHOLD,RATIO_THRESHOLD,OUTPUT_FILE
         # Write the average grade into the 'Average' column
         grades_df.at[index, 'Average'] = int(average_grade)
         # Write the number of points into the 'Points' column
-        final_points = int(8 * (average_grade / 100))
+        final_points = round(8 * (average_grade / 100))
         grades_df.at[index, 'Points'] = final_points
 
 
